@@ -1,11 +1,13 @@
-// components/PriceTicker.jsx
 'use client';
 
 export default function PriceTicker({ products = [] }) {
+  // Array চেক নিশ্চিত করা
+  const dataList = Array.isArray(products) ? products : [];
+
   return (
     <div className="bg-emerald-800 text-white overflow-hidden whitespace-nowrap py-2 border-b border-emerald-700">
       <div className="inline-block animate-marquee">
-        {products.map((item, idx) => {
+        {dataList.map((item, idx) => {
           const isUp = item.change > 0;
           const isDown = item.change < 0;
           return (

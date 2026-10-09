@@ -32,6 +32,32 @@
 // }
 
 
+// import { Noto_Sans_Bengali } from "next/font/google";
+// import "./globals.css";
+// import Navbar from "@/components/Navbar";
+// import Footer from "@/components/Footer";
+
+// // Noto Sans Bengali ফন্ট কনফিগারেশন
+// const notoBengali = Noto_Sans_Bengali({
+//   weight: ["300", "400", "500", "600", "700"],
+//   subsets: ["bengali"],
+//   variable: "--font-noto-bengali", // Tailwind বা CSS-এর জন্য
+// });
+
+// export default function RootLayout({ children }) {
+//   return (
+//     <html lang="bn">
+//       <body className={notoBengali.className}>
+//         <Navbar/>
+//         {children}
+//         <Footer/>
+//       </body>
+//     </html>
+//   );
+// }
+
+
+
 import { Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -41,16 +67,26 @@ import Footer from "@/components/Footer";
 const notoBengali = Noto_Sans_Bengali({
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["bengali"],
-  variable: "--font-noto-bengali", // Tailwind বা CSS-এর জন্য
+  variable: "--font-noto-bengali",
 });
+
+// টিকারের জন্য নমুনা ডাটা (পরবর্তীতে API থেকে আনতে পারেন)
+const tickerProducts = [
+  { name: 'নাজিরশাইল চাল', price: 75, unit: 'কেজি', change: 2.5, emoji: '🍚' },
+  { name: 'মসুর ডাল', price: 130, unit: 'কেজি', change: -1.2, emoji: '🫘' },
+  { name: 'সয়াবিন তেল', price: 165, unit: 'লিটার', change: 0, emoji: '🍾' },
+  { name: 'পেঁয়াজ', price: 90, unit: 'কেজি', change: 5.0, emoji: '🧅' },
+  { name: 'ডিম (ফার্ম)', price: 145, unit: 'ডজন', change: -3.5, emoji: '🥚' },
+];
 
 export default function RootLayout({ children }) {
   return (
     <html lang="bn">
       <body className={notoBengali.className}>
-        <Navbar/>
+        {/* এখানে tickerProducts প্রপসটি পাঠানো হয়েছে */}
+        <Navbar tickerProducts={tickerProducts} />
         {children}
-        <Footer/>
+        <Footer />
       </body>
     </html>
   );
