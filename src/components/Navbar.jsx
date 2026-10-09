@@ -175,11 +175,14 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getBengaliDate } from "@/lib/utils";
 import PriceTicker from "./PriceTicker";
+
+
+const emptySubscribe = () => () => {};
 
 export default function Navbar({
   user = null,
@@ -187,12 +190,13 @@ export default function Navbar({
   onSignOut,
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [bengaliDate, setBengaliDate] = useState("");
   const pathname = usePathname();
 
-  useEffect(() => {
-    setBengaliDate(getBengaliDate(new Date()));
-  }, []);
+  const bengaliDate = useSyncExternalStore(
+    emptySubscribe,
+    () => getBengaliDate(new Date()),
+    () => ""
+  );
 
   const closeMenu = () => {
     setIsMobileMenuOpen(false);
@@ -382,3 +386,8 @@ export default function Navbar({
     </header>
   );
 }
+
+
+
+
+
