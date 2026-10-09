@@ -1,13 +1,23 @@
 // components/Navbar.jsx
 'use client';
 
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getBengaliDate } from '@/lib/utils';
- import PriceTicker from './PriceTicker';
+import PriceTicker from './PriceTicker';
+
+const emptySubscribe = () => () => {};
 
 export default function Navbar({ user, tickerProducts = [] }) {
   const pathname = usePathname();
+
+  // সার্ভার এবং ক্লায়েন্ট সাইড সেফ রাখার জন্য useSyncExternalStore
+  const bengaliDate = useSyncExternalStore(
+    emptySubscribe,
+    () => getBengaliDate(new Date()), // Client-side snapshot
+    () => ''                          // Server-side snapshot
+  );
 
   const categories = [
     { name: 'সব পণ্য', href: '/' },
@@ -28,7 +38,9 @@ export default function Navbar({ user, tickerProducts = [] }) {
             <span>🛒</span>
             <span>বাজার দর</span>
           </div>
-          <span className="text-xs text-gray-500 mt-0.5">{getBengaliDate()}</span>
+          {bengaliDate && (
+            <span className="text-xs text-gray-500 mt-0.5">{bengaliDate}</span>
+          )}
         </Link>
 
         {/* Right: Auth / Profile */}
@@ -92,7 +104,7 @@ export default function Navbar({ user, tickerProducts = [] }) {
       </div>
 
       {/* Bottom Bar: Price Marquee Ticker */}
-      {/* <PriceTicker products={tickerProducts} /> */}
+      <PriceTicker products={tickerProducts} />
     </header>
   );
 }

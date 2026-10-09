@@ -10,14 +10,15 @@ export function toBengaliNumber(num) {
 }
 
 // আজকের বাংলা তারিখ তৈরি করা
-export function getBengaliDate() {
+export function getBengaliDate(date) {
+  if (!date) return '';
   const options = {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   };
-  return new Date().toLocaleDateString('bn-BD', options);
+  return new Date(date).toLocaleDateString('bn-BD', options);
 }
 
 // API Endpoints
