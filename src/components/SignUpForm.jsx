@@ -65,14 +65,15 @@ export default function SignUpForm() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">ইমেইল</label>
-          <input
+           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="input input-bordered w-full focus:outline-emerald-600"
             placeholder="example@mail.com"
-          />
+          /> 
+           
         </div>
 
         <div>

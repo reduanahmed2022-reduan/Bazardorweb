@@ -1,9 +1,20 @@
-import SignInForm from '@/components/SignInForm';
+
+
+import { Suspense } from "react";
+import SignInForm from "@/components/SignInForm";
 
 export default function SignInPage() {
   return (
-    <main className="min-h-[80vh] flex items-center justify-center p-4 bg-gray-50">
-      <SignInForm />
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
+      <Suspense
+        fallback={
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm">
+            সাইন ইন পেজ লোড হচ্ছে...
+          </div>
+        }
+      >
+        <SignInForm />
+      </Suspense>
     </main>
   );
 }

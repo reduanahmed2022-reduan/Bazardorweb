@@ -1,259 +1,496 @@
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import { useParams } from "next/navigation";
+// import Link from "next/link";
+// import toast from "react-hot-toast";
+
+// export default function CategoryDetailsPage() {
+//   const params = useParams();
+//   const categorySlug = params?.categorie;
+
+//   const [products, setProducts] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [sortOption, setSortOption] = useState("default");
+
+//   // API থেকে ক্যাটাগরি অনুযায়ী প্রোডাক্ট ফেচ করা
+//   useEffect(() => {
+//     if (!categorySlug) return;
+
+//     const fetchCategoryProducts = async () => {
+//       setLoading(true);
+//       try {
+//         const res = await fetch(
+//           `https://openapi.programming-hero.com/api/bazardor/products?category=${categorySlug}`
+//         );
+//         const data = await res.json();
+
+//         if (data && data.status) {
+//           setProducts(data.data || []);
+//         } else {
+//           setProducts([]);
+//         }
+//       } catch (error) {
+//         console.error("Failed to fetch products:", error);
+//         toast.error("তথ্য লোড করতে সমস্যা হয়েছে!");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchCategoryProducts();
+//   }, [categorySlug]);
+
+//   // সর্টিং লজিক (দাম: কম থেকে বেশি / বেশি থেকে কম)
+//   const sortedProducts = [...products].sort((a, b) => {
+//     if (sortOption === "low-to-high") {
+//       return a.price - b.price;
+//     } else if (sortOption === "high-to-low") {
+//       return b.price - a.price;
+//     }
+//     return 0; // ডিফল্ট
+//   });
+
+//   return (
+//     <div className="max-w-6xl mx-auto px-4 py-8">
+//       {/* ক্যাটাগরি হেডার ও সর্ট কন্ট্রোল */}
+//       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-4">
+//         <div>
+//           <h1 className="text-2xl font-bold text-gray-800 capitalize flex items-center gap-2">
+//             <span>🛒</span> ক্যাটাগরি: {categorySlug}
+//           </h1>
+//           <p className="text-sm text-gray-500 mt-1">
+//             এই ক্যাটাগরির অন্তর্ভুক্ত সকল পণ্যের বর্তমান বাজার দর
+//           </p>
+//         </div>
+
+//         {/* সর্ট ড্রপডাউন (C1 Requirement) */}
+//         <div className="flex items-center gap-2">
+//           <span className="text-sm font-medium text-gray-600">সাজান:</span>
+//           <select
+//             value={sortOption}
+//             onChange={(e) => setSortOption(e.target.value)}
+//             className="border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+//           >
+//             <option value="default">ডিফল্ট</option>
+//             <option value="low-to-high">দাম: কম থেকে বেশি</option>
+//             <option value="high-to-low">দাম: বেশি থেকে কম</option>
+//           </select>
+//         </div>
+//       </div>
+
+//       {/* লোডিং স্টেট (Skeleton Animation) */}
+//       {loading ? (
+//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+//           {[...Array(8)].map((_, index) => (
+//             <div
+//               key={index}
+//               className="border rounded-2xl p-4 h-48 bg-gray-100 animate-pulse flex flex-col justify-between"
+//             >
+//               <div className="w-12 h-12 bg-gray-200 rounded-full mb-4"></div>
+//               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+//               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+//             </div>
+//           ))}
+//         </div>
+//       ) : sortedProducts.length > 0 ? (
+//         /* প্রোডাক্ট গ্রিড */
+//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+//           {sortedProducts.map((product) => (
+//             <Link
+//               key={product.id || product.slug}
+//               href={`/product/${product.slug}`}
+//               className="bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
+//             >
+//               <div>
+//                 <div className="text-4xl mb-3 group-hover:scale-110 transition-transform inline-block">
+//                   {product.emoji || "📦"}
+//                 </div>
+//                 <h3 className="font-semibold text-lg text-gray-800 mb-1">
+//                   {product.name}
+//                 </h3>
+//                 <p className="text-xs text-gray-500 mb-3">{product.unit}</p>
+//               </div>
+
+//               <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-100">
+//                 <span className="font-bold text-gray-900 text-base">
+//                   {product.priceFormatted || `${product.price} টাকা`}
+//                 </span>
+//                 <span
+//                   className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+//                     product.changeType === "up"
+//                       ? "bg-green-100 text-green-700"
+//                       : product.changeType === "down"
+//                       ? "bg-red-100 text-red-700"
+//                       : "bg-gray-100 text-gray-600"
+//                   }`}
+//                 >
+//                   {product.changeType === "up" && "▲ "}
+//                   {product.changeType === "down" && "▼ "}
+//                   {product.change || "০.০"}%
+//                 </span>
+//               </div>
+//             </Link>
+//           ))}
+//         </div>
+//       ) : (
+//         /* এম্পটি স্টেট (404-style message) */
+//         <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-300 mt-6">
+//           <p className="text-5xl mb-3">🔍</p>
+//           <h2 className="text-xl font-bold text-gray-700 mb-2">
+//             এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি!
+//           </h2>
+//           <p className="text-gray-500 mb-6 text-sm">
+//             অনুগ্রহ করে অন্য ক্যাটাগরি চেক করুন অথবা হোম পেজে ফিরে যান।
+//           </p>
+//           <Link
+//             href="/"
+//             className="inline-block bg-green-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-green-700 transition shadow-sm"
+//           >
+//             হোম পেজে ফিরে যান
+//           </Link>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+
+
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import Image from "next/image";
 
+const API_URL = "https://openapi.programming-hero.com/api/bazardor";
 
-export default function CategoryPage() {
+const CATEGORY_INFO = {
+  chal: { name: "চাল", icon: "🍚" },
+  tel: { name: "তেল", icon: "🛢️" },
+  sobji: { name: "সবজি", icon: "🥦" },
+  mach: { name: "মাছ", icon: "🐟" },
+  mangsho: { name: "মাংস", icon: "🥩" },
+  dal: { name: "ডাল", icon: "🫘" },
+  dim: { name: "ডিম", icon: "🥚" },
+  moshla: { name: "মসলা", icon: "🌶️" },
+};
+
+// API response থেকে products array বের করা
+function extractProducts(result) {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.data)) return result.data;
+  if (Array.isArray(result?.products)) return result.products;
+  if (Array.isArray(result?.data?.products)) return result.data.products;
+  if (Array.isArray(result?.data?.items)) return result.data.items;
+
+  return [];
+}
+
+// দামকে number-এ রূপান্তর করা
+function getPrice(product) {
+  const value = product?.today ?? product?.price ?? 0;
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+// বাংলা সংখ্যা ও টাকা দেখানো
+function formatPrice(value) {
+  return `${value.toLocaleString("bn-BD")} টাকা`;
+}
+
+function CategoryContent() {
   const params = useParams();
-  const categorie = params?.categorie;
-  const slug = Array.isArray(categorie) ? categorie[0] : categorie;
+  const categorySlug = Array.isArray(params?.categorie)
+    ? params.categorie[0]
+    : params?.categorie;
 
   const [products, setProducts] = useState([]);
-  const [sortBy, setSortBy] = useState("default");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const category = categoryInfo[slug];
+  const [sortOption, setSortOption] = useState("default");
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!categorySlug) return;
 
-    const controller = new AbortController();
+    let cancelled = false;
 
-    async function loadProducts() {
+    async function fetchCategoryProducts() {
       setLoading(true);
-      setError("");
+      setError(false);
       setProducts([]);
 
       try {
-        const response = await fetch(API_URL, {
-          signal: controller.signal,
-          cache: "no-store",
-        });
+        // প্রথমে নির্দিষ্ট category-এর products আনা
+        const response = await fetch(
+          `${API_URL}/products?category=${encodeURIComponent(categorySlug)}`
+        );
 
         if (!response.ok) {
-          throw new Error("পণ্যের তথ্য লোড করা যায়নি।");
+          throw new Error("Products fetch failed");
         }
 
         const result = await response.json();
+        let categoryProducts = extractProducts(result);
 
-        const allProducts = Array.isArray(result)
-          ? result
-          : Array.isArray(result.data)
-            ? result.data
-            : Array.isArray(result.products)
-              ? result.products
-              : Array.isArray(result.data?.products)
-                ? result.data.products
-                : [];
+        // API query থেকে products না এলে সব products এনে filter করা
+        if (categoryProducts.length === 0) {
+          const allResponse = await fetch(`${API_URL}/products`);
 
-        if (!Array.isArray(allProducts)) {
-          throw new Error("API থেকে সঠিক তথ্য পাওয়া যায়নি।");
+          if (!allResponse.ok) {
+            throw new Error("All products fetch failed");
+          }
+
+          const allResult = await allResponse.json();
+          const allProducts = extractProducts(allResult);
+
+          categoryProducts = allProducts.filter(
+            (product) =>
+              String(product.category).toLowerCase() ===
+              String(categorySlug).toLowerCase()
+          );
         }
 
-        const filtered = allProducts.filter(
-          (product) => product.category === slug
-        );
-
-        setProducts(filtered);
+        if (!cancelled) {
+          setProducts(categoryProducts);
+        }
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Category API error:", err);
-          setError(err.message || "কিছু একটা সমস্যা হয়েছে।");
+        console.error("Failed to fetch category products:", err);
+
+        if (!cancelled) {
+          setError(true);
+          toast.error("পণ্যের তথ্য লোড করতে সমস্যা হয়েছে!");
         }
       } finally {
-        if (!controller.signal.aborted) {
+        if (!cancelled) {
           setLoading(false);
         }
       }
     }
 
-    loadProducts();
+    fetchCategoryProducts();
 
-    return () => controller.abort();
-  }, [slug]);
+    return () => {
+      cancelled = true;
+    };
+  }, [categorySlug]);
 
-  const sortedProducts = useMemo(() => {
-    const list = [...products];
-
-    if (sortBy === "low") {
-      list.sort((a, b) => Number(a.today) - Number(b.today));
-    } else if (sortBy === "high") {
-      list.sort((a, b) => Number(b.today) - Number(a.today));
+  // দাম অনুযায়ী sorting
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sortOption === "low-to-high") {
+      return getPrice(a) - getPrice(b);
     }
 
-    return list;
-  }, [products, sortBy]);
+    if (sortOption === "high-to-low") {
+      return getPrice(b) - getPrice(a);
+    }
 
-  if (!category) {
-    return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md text-center">
-          <div className="mb-4 text-7xl"></div>
-          <h1 className="mb-3 text-2xl font-extrabold text-gray-900">
-            ক্যাটাগরি খুঁজে পাওয়া যায়নি!
-          </h1>
-          <p className="mb-6 text-gray-500">
-            দুঃখিত, এই ক্যাটাগরিটি বর্তমানে উপলব্ধ নয়।
-          </p>
-          <Link
-            href="/"
-            className="inline-flex rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white transition hover:bg-emerald-700"
-          >
-            ← হোম পেজে ফিরে যান
-          </Link>
-        </div>
-      </main>
-    );
-  }
+    return 0;
+  });
+
+  const categoryInfo = CATEGORY_INFO[categorySlug] || {
+    name: categorySlug || "ক্যাটাগরি",
+    icon: "🛒",
+  };
 
   return (
-    <main className="min-h-screen bg-[#f7f9f7]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        {/* Breadcrumb */}
-        <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
-          <Link href="/" className="transition hover:text-emerald-700">
-            হোম
-          </Link>
-          <span>/</span>
-          <span className="font-semibold text-emerald-700">
-            {category.name}
-          </span>
+    <main className="max-w-6xl mx-auto px-4 py-8">
+      {/* Category header and sorting */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 border-b border-gray-200 pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <span>{categoryInfo.icon}</span>
+            ক্যাটাগরি: {categoryInfo.name}
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-1">
+            এই ক্যাটাগরির অন্তর্ভুক্ত পণ্যের বর্তমান বাজারদর
+          </p>
         </div>
 
-        {/* Category Hero */}
-        <section className="relative mb-10 overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-800 via-emerald-700 to-green-600 px-6 py-8 text-white shadow-lg sm:px-10 sm:py-10">
-          <div className="absolute -right-8 -top-12 h-48 w-48 rounded-full bg-white/10 blur-sm" />
-          <div className="absolute -bottom-16 right-28 h-40 w-40 rounded-full bg-lime-300/10" />
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="sort-products"
+            className="text-sm font-medium text-gray-600"
+          >
+            সাজান:
+          </label>
 
-          <div className="relative z-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-            <div>
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium">
-                <span className="h-2 w-2 rounded-full bg-lime-300" />
-                বাজারদর ক্যাটাগরি
-              </span>
-
-              <h1 className="mb-3 text-3xl font-extrabold sm:text-4xl lg:text-5xl">
-                {category.icon} {category.name}
-              </h1>
-
-              <p className="max-w-xl text-sm leading-7 text-emerald-50 sm:text-base">
-                {category.description}
-              </p>
-            </div>
-
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center self-start rounded-3xl border border-white/20 bg-white/10 text-6xl shadow-inner sm:h-36 sm:w-36 sm:self-auto sm:text-7xl">
-              {category.icon}
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-7 flex flex-wrap gap-3 text-sm">
-            <span className="rounded-xl bg-white/15 px-4 py-2">
-              📦 {toBanglaNumber(loading ? "..." : products.length)}টি পণ্য
-            </span>
-            <span className="rounded-xl bg-white/15 px-4 py-2">
-              📊 আজকের বাজারদর
-            </span>
-          </div>
-        </section>
-
-        {/* Product heading and sorting */}
-        <section>
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="mb-2 text-sm font-bold uppercase tracking-wider text-emerald-700">
-                TODAY&apos;S MARKET
-              </p>
-              <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
-                {category.name}র সকল পণ্য
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-gray-500 sm:text-base">
-                পণ্যের বর্তমান দাম দেখুন এবং বিস্তারিত জানতে কার্ডে ক্লিক করুন।
-              </p>
-            </div>
-
-            <label className="flex items-center gap-3 self-start rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm sm:self-auto">
-              <span className="shrink-0 font-medium text-gray-600">
-                সাজান:
-              </span>
-              <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
-                className="max-w-44 bg-transparent font-semibold text-gray-800 outline-none"
-              >
-                <option value="default">ডিফল্ট</option>
-                <option value="low">দাম: কম থেকে বেশি</option>
-                <option value="high">দাম: বেশি থেকে কম</option>
-              </select>
-            </label>
-          </div>
-
-          {/* Loading skeleton */}
-          {loading && (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <ProductSkeleton key={index} />
-              ))}
-            </div>
-          )}
-
-          {/* API error */}
-          {!loading && error && (
-            <div className="rounded-3xl border border-red-100 bg-white px-5 py-12 text-center">
-              <div className="mb-3 text-5xl">⚠️</div>
-              <h3 className="mb-2 text-xl font-bold text-gray-900">
-                তথ্য লোড করা যায়নি
-              </h3>
-              <p className="mb-6 text-sm text-gray-500">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700"
-              >
-                আবার চেষ্টা করুন
-              </button>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!loading && !error && sortedProducts.length === 0 && (
-            <div className="rounded-3xl border border-gray-100 bg-white px-5 py-14 text-center shadow-sm">
-              <div className="mb-4 text-6xl">🧺</div>
-              <h3 className="mb-2 text-xl font-bold text-gray-900">
-                এই ক্যাটাগরিতে কোনো পণ্য নেই
-              </h3>
-              <p className="mb-6 text-sm text-gray-500">
-                অন্য ক্যাটাগরি দেখুন অথবা হোম পেজে ফিরে যান।
-              </p>
-              <Link
-                href="/"
-                className="inline-flex rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700"
-              >
-                হোম পেজে ফিরে যান
-              </Link>
-            </div>
-          )}
-
-          {/* Product grid */}
-          {!loading && !error && sortedProducts.length > 0 && (
-            <>
-              <div className="mb-5 flex items-center justify-between text-sm text-gray-500">
-                <p>
-                  মোট{" "}
-                  <span className="font-bold text-gray-900">
-                    {toBanglaNumber(sortedProducts.length)}
-                  </span>{" "}
-                  টি পণ্য পাওয়া গেছে
-                </p>
-                <span>দাম: টাকা / একক</span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedProducts.map((product) => (
-                  <ProductCard key={product.id ?? product.slug} product={product} />
-                ))}
-              </div>
-            </>
-          )}
-        </section>
+          <select
+            id="sort-products"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="default">ডিফল্ট</option>
+            <option value="low-to-high">দাম: কম থেকে বেশি</option>
+            <option value="high-to-low">দাম: বেশি থেকে কম</option>
+          </select>
+        </div>
       </div>
+
+      {/* Loading skeleton */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="border border-gray-200 rounded-2xl p-4 h-48 bg-gray-50 animate-pulse"
+            >
+              <div className="w-12 h-12 bg-gray-200 rounded-full mb-4" />
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
+              <div className="h-3 bg-gray-200 rounded w-1/2 mb-5" />
+              <div className="h-5 bg-gray-200 rounded w-2/3" />
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        /* API error state */
+        <div className="text-center py-16 bg-red-50 rounded-2xl border border-red-100">
+          <p className="text-4xl mb-3">⚠️</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            তথ্য লোড করা যায়নি
+          </h2>
+          <p className="text-sm text-gray-600 mb-5">
+            ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।
+          </p>
+
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="bg-green-600 text-white px-6 py-2.5 rounded-xl hover:bg-green-700"
+          >
+            আবার চেষ্টা করুন
+          </button>
+        </div>
+      ) : sortedProducts.length > 0 ? (
+        /* Product grid */
+        <>
+          <p className="text-sm text-gray-500 mb-4">
+            মোট {sortedProducts.length.toLocaleString("bn-BD")}টি পণ্য
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {sortedProducts.map((product) => {
+              const price = getPrice(product);
+              const change = product.change || {};
+              const direction = change.dir;
+              const changePercent = change.pct;
+              const isUp = direction === "up";
+              const isDown = direction === "down";
+
+              const productName =
+                product.nameBn || product.name || "নাম পাওয়া যায়নি";
+
+              const productLinkId = product.slug || product.id;
+
+              return (
+                <Link
+                  key={product.id ?? product.slug ?? productName}
+                  href={`/product/${productLinkId}`}
+                  className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 flex flex-col justify-between group"
+                >
+                  <div>
+
+                    <div>
+                      <div className="text-4xl mb-3 group-hover:scale-110 transition-transform inline-block">
+                        {product.image ||
+                          product.categoryIcon ||
+                          categoryInfo.icon ||
+                          "📦"}
+                      </div>
+                    </div>
+
+                    <h2 className="font-semibold text-lg text-gray-800 mb-1">
+                      {productName}
+                    </h2>
+
+                    <p className="text-xs text-gray-500 mb-3">
+                      {product.unit || "একক উল্লেখ নেই"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 mt-2 pt-3 border-t border-gray-100">
+                    <span className="font-bold text-gray-900 text-sm sm:text-base">
+                      {formatPrice(price)}
+                    </span>
+
+                    {changePercent !== undefined &&
+                      changePercent !== null ? (
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${isUp
+                            ? "bg-red-100 text-red-700"
+                            : isDown
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                      >
+                        {isUp ? "▲ " : isDown ? "▼ " : ""}
+                        {Number(changePercent).toLocaleString("bn-BD")}%
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+                        পরিবর্তন নেই
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        /* Empty state */
+        <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-300 mt-6">
+          <p className="text-5xl mb-3">🔍</p>
+
+          <h2 className="text-xl font-bold text-gray-700 mb-2">
+            এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি!
+          </h2>
+
+          <p className="text-gray-500 mb-6 text-sm">
+            অন্য ক্যাটাগরি দেখুন অথবা হোম পেজে ফিরে যান।
+          </p>
+
+          <Link
+            href="/"
+            className="inline-block bg-green-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-green-700 transition"
+          >
+            হোম পেজে ফিরে যান
+          </Link>
+        </div>
+      )}
     </main>
   );
 }
+
+// Suspense boundary fixes the useParams prerendering error
+export default function CategoryDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-48 rounded-2xl bg-gray-100 animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <CategoryContent />
+    </Suspense>
+  );
+}
+
+
+
+
+
