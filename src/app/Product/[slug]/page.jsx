@@ -968,7 +968,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
@@ -1013,9 +1013,9 @@ function displayPrice(value) {
 }
 
 export default function ProductDetailsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const productId = searchParams.get("id");
+ const router = useRouter();
+const params = useParams();
+const productId = params.slug;
 
   const { data: session, isPending } = authClient.useSession();
 
@@ -1030,9 +1030,9 @@ export default function ProductDetailsPage() {
     if (isPending) return;
 
     if (!isAuthenticated) {
-      const callbackURL = productId
-        ? `/product?id=${encodeURIComponent(productId)}`
-        : "/product";
+     const callbackURL = productId
+      ? `/product/${encodeURIComponent(productId)}`
+      : "/products";
 
       router.replace(
         `/signin?callbackURL=${encodeURIComponent(callbackURL)}`
