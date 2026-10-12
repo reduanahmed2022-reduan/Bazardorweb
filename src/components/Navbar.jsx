@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { signOut, useSession } from "@/lib/auth-client";
 import { getBengaliDate } from "@/lib/utils";
 import PriceTicker from "./PriceTicker";
-import { User, Settings, LogOut, Package, LayoutDashboard, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown } from "lucide-react";
 
 const emptySubscribe = () => () => {};
 

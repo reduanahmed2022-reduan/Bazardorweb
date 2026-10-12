@@ -1,62 +1,87 @@
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import ProductCard from '@/components/ProductCard';
-import ProductSkeleton from '@/components/ProductSkeleton';
-import Image from 'next/image';
+import { useEffect, useState } from "react";
+import ProductCard from "@/components/ProductCard";
+import ProductSkeleton from "@/components/ProductSkeleton";
+import Image from "next/image";
 
-const BASE_URL = 'https://api.api-store.workers.dev/api/bazardor';
+const BASE_URL = "https://api.abcz.workers.dev/api/bazardor";
+
+function getProducts(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.products)) return payload.products;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.products)) return payload.data.products;
+  return [];
+}
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    async function fetchData() {
+    const controller = new AbortController();
+
+    async function fetchProducts() {
       try {
-        setLoading(true);
+        const response = await fetch(`${BASE_URL}/products`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
 
-        const resProducts = await fetch(`${BASE_URL}/products`);
-
-        if (!resProducts.ok) {
-          throw new Error('Failed to fetch products');
+        if (!response.ok) {
+          throw new Error(
+            `পণ্যের তথ্য আনা যায়নি (HTTP ${response.status})`
+          );
         }
 
-        const dataProducts = await resProducts.json();
+        const payload = await response.json();
+        const productList = getProducts(payload);
 
-        setProducts(
-          Array.isArray(dataProducts)
-            ? dataProducts
-            : dataProducts.products || dataProducts.data || []
+        if (productList.length === 0) {
+          throw new Error("API থেকে কোনো পণ্যের তথ্য পাওয়া যায়নি।");
+        }
+
+        setProducts(productList);
+        setError("");
+      } catch (err) {
+        if (err.name === "AbortError") return;
+
+        console.error("Error fetching products:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "পণ্যের তথ্য আনতে সমস্যা হয়েছে।"
         );
-      } catch (error) {
-        console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
 
-    fetchData();
-  }, []);
+    fetchProducts();
+
+    return () => controller.abort();
+  }, [retryCount]);
 
   const risers = products
-    .filter((p) => p.change?.pct > 0)
+    .filter((product) => Number(product?.change?.pct) > 0)
     .slice(0, 6);
 
   const fallers = products
-    .filter((p) => p.change?.pct < 0)
+    .filter((product) => Number(product?.change?.pct) < 0)
     .slice(0, 6);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gray-50 font-sans text-gray-800">
-
-      {/* HERO / BANNER SECTION */}
+    <div className="min-h-screen overflow-x-clip bg-gray-50 font-sans text-gray-800">
+      {/* HERO SECTION */}
       <section className="bg-emerald-50 py-8 sm:py-10 md:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-6 px-4 sm:px-6 md:grid-cols-2 md:gap-8 lg:gap-12 lg:px-8">
-
-          {/* Hero Text */}
-          <div className="order-2 text-center md:order-1 md:text-left">
+          <div className="order-2 min-w-0 text-center md:order-1 md:text-left">
             <span className="mb-3 inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 sm:text-sm">
               প্রতিদিনের তথ্য
             </span>
@@ -72,13 +97,12 @@ export default function HomePage() {
 
             <a
               href="#সব-পণ্য"
-              className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-emerald-700 sm:px-6 sm:text-base"
+              className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 sm:px-6 sm:text-base"
             >
               আজকের বাজার দর দেখুন 👇
             </a>
           </div>
 
-          {/* Hero Image */}
           <div className="order-1 flex justify-center md:order-2">
             <div className="relative w-full max-w-[220px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[420px]">
               <Image
@@ -92,34 +116,53 @@ export default function HomePage() {
               />
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* MAIN CONTENT AREA */}
+      {/* PRODUCTS */}
       <main className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:space-y-12 sm:px-6 sm:py-10 lg:space-y-14 lg:px-8 lg:py-12">
-
         {loading ? (
-          /* ProductSkeleton Component */
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div
+            className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
+            aria-label="পণ্য লোড হচ্ছে"
+            aria-busy="true"
+          >
             {Array.from({ length: 8 }, (_, index) => (
               <ProductSkeleton key={index} />
             ))}
           </div>
+        ) : error ? (
+          <div
+            className="rounded-lg border border-red-200 bg-white p-5 text-center"
+            role="alert"
+          >
+            <p className="text-sm text-red-700">{error}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                setError("");
+                setRetryCount((count) => count + 1);
+              }}
+              className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              আবার চেষ্টা করুন
+            </button>
+          </div>
         ) : (
           <>
-            {/* SECTION A: Top Risers */}
+            {/* PRICE INCREASES */}
             <section>
               <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-800 sm:mb-5 sm:text-xl md:text-2xl">
-                <span className="text-red-500">▲</span>
+                <span className="text-red-500" aria-hidden="true">▲</span>
                 আজ দাম বেড়েছে
               </h2>
 
               {risers.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-                  {risers.map((product) => (
+                <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+                  {risers.map((product, index) => (
                     <ProductCard
-                      key={product.id || product.slug}
+                      key={product.id ?? product.slug ?? `riser-${index}`}
                       product={product}
                     />
                   ))}
@@ -131,18 +174,18 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* SECTION B: Top Fallers */}
+            {/* PRICE DECREASES */}
             <section>
               <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-800 sm:mb-5 sm:text-xl md:text-2xl">
-                <span className="text-emerald-500">▼</span>
+                <span className="text-emerald-500" aria-hidden="true">▼</span>
                 আজ দাম কমেছে
               </h2>
 
               {fallers.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-                  {fallers.map((product) => (
+                <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+                  {fallers.map((product, index) => (
                     <ProductCard
-                      key={product.id || product.slug}
+                      key={product.id ?? product.slug ?? `faller-${index}`}
                       product={product}
                     />
                   ))}
@@ -154,7 +197,7 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* SECTION C: All Products */}
+            {/* ALL PRODUCTS */}
             <section id="সব-পণ্য" className="scroll-mt-24">
               <div className="mb-5 border-b border-gray-200 pb-3 sm:mb-6">
                 <h2 className="text-xl font-bold text-gray-800 sm:text-2xl md:text-3xl">
@@ -167,10 +210,10 @@ export default function HomePage() {
               </div>
 
               {products.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-                  {products.map((product) => (
+                <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+                  {products.map((product, index) => (
                     <ProductCard
-                      key={product.id || product.slug}
+                      key={product.id ?? product.slug ?? `product-${index}`}
                       product={product}
                     />
                   ))}
@@ -187,5 +230,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-

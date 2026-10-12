@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState } from "react";
@@ -12,7 +11,7 @@ export default function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,30 +64,42 @@ export default function SignInForm() {
     }
   };
 
-  // Google দিয়ে login
-  const handleSocialLogin = async () => {
+  // Google অথবা GitHub দিয়ে login
+  const handleSocialLogin = async (provider) => {
     if (loading || socialLoading) return;
 
-    setSocialLoading(true);
+    setSocialLoading(provider);
 
     try {
       const callbackURL = getRedirectURL();
 
-      await signIn.social({
-        provider: "google",
+      const result = await signIn.social({
+        provider,
         callbackURL,
         errorCallbackURL: `/signin?callbackURL=${encodeURIComponent(
           callbackURL
         )}`,
       });
+
+      if (result?.error) {
+        toast.error(
+          result.error.message ||
+            `${provider === "google" ? "Google" : "GitHub"} দিয়ে সাইন ইন করা যায়নি!`
+        );
+        setSocialLoading("");
+      }
     } catch (error) {
-      console.error("Google sign in error:", error);
-      toast.error("Google দিয়ে সাইন ইন করা যায়নি!");
-      setSocialLoading(false);
+      console.error(`${provider} sign in error:`, error);
+
+      toast.error(
+        `${provider === "google" ? "Google" : "GitHub"} দিয়ে সাইন ইন করা যায়নি!`
+      );
+
+      setSocialLoading("");
     }
   };
 
-  const isBusy = loading || socialLoading;
+  const isBusy = loading || Boolean(socialLoading);
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
@@ -154,15 +165,28 @@ export default function SignInForm() {
         অথবা
       </div>
 
+      {/* Google Sign In */}
       <button
         type="button"
-        onClick={handleSocialLogin}
+        onClick={() => handleSocialLogin("google")}
         disabled={isBusy}
         className="btn flex w-full items-center justify-center gap-2 border-gray-300 hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {socialLoading
+        {socialLoading === "google"
           ? "Google দিয়ে সাইন ইন হচ্ছে..."
           : "Google দিয়ে সাইন ইন করুন"}
+      </button>
+
+      {/* GitHub Sign In */}
+      <button
+        type="button"
+        onClick={() => handleSocialLogin("github")}
+        disabled={isBusy}
+        className="btn mt-3 flex w-full items-center justify-center gap-2 border-gray-300 hover:border-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {socialLoading === "github"
+          ? "GitHub দিয়ে সাইন ইন হচ্ছে..."
+          : "GitHub দিয়ে সাইন ইন করুন"}
       </button>
 
       <p className="mt-6 text-center text-sm text-gray-600">
