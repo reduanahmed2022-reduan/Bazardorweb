@@ -39,4 +39,12 @@ export const auth = betterAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     },
   },
+
+account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"], // এখানে গুগল প্রোভাইডার যুক্ত করুন
+    },
+  },
+
 });

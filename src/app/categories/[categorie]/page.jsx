@@ -5,9 +5,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import Image from "next/image";
 
-const API_URL = "https://openapi.programming-hero.com/api/bazardor";
+const API_URL = "https://api.abcz.workers.dev/api/bazardor";
 
 const CATEGORY_INFO = {
   chal: { name: "চাল", icon: "🍚" },
@@ -20,13 +19,29 @@ const CATEGORY_INFO = {
   moshla: { name: "মসলা", icon: "🌶️" },
 };
 
+// URL slug কে ডাটাবেজের category নামের সাথে মেলানোর জন্য mapping
+const SLUG_MAPPING = {
+  oil: "tel",
+  rice: "chal",
+  vegetables: "sobji",
+  fish: "mach",
+  meat: "mangsho",
+  lentils: "dal",
+  egg: "dim",
+  spices: "moshla",
+};
+
 // API response থেকে products array বের করা
 function extractProducts(result) {
   if (Array.isArray(result)) return result;
   if (Array.isArray(result?.data)) return result.data;
   if (Array.isArray(result?.products)) return result.products;
-  if (Array.isArray(result?.data?.products)) return result.data.products;
-  if (Array.isArray(result?.data?.items)) return result.data.items;
+  if (Array.isArray(result?.data?.products)) {
+    return result.data.products;
+  }
+  if (Array.isArray(result?.data?.items)) {
+    return result.data.items;
+  }
 
   return [];
 }
@@ -46,6 +61,7 @@ function formatPrice(value) {
 
 function CategoryContent() {
   const params = useParams();
+
   const categorySlug = Array.isArray(params?.categorie)
     ? params.categorie[0]
     : params?.categorie;
@@ -66,35 +82,35 @@ function CategoryContent() {
       setProducts([]);
 
       try {
-        // প্রথমে নির্দিষ্ট category-এর products আনা
-        const response = await fetch(
-          `${API_URL}/products?category=${encodeURIComponent(categorySlug)}`
-        );
+        const response = await fetch(`${API_URL}/products`, {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
-          throw new Error("Products fetch failed");
+          throw new Error(`Products API error: ${response.status}`);
         }
 
         const result = await response.json();
-        let categoryProducts = extractProducts(result);
 
-        // API query থেকে products না এলে সব products এনে filter করা
-        if (categoryProducts.length === 0) {
-          const allResponse = await fetch(`${API_URL}/products`);
+        console.log("Bazar-Dor API response:", result);
 
-          if (!allResponse.ok) {
-            throw new Error("All products fetch failed");
-          }
+        const allProducts = extractProducts(result);
 
-          const allResult = await allResponse.json();
-          const allProducts = extractProducts(allResult);
-
-          categoryProducts = allProducts.filter(
-            (product) =>
-              String(product.category).toLowerCase() ===
-              String(categorySlug).toLowerCase()
-          );
+        if (!Array.isArray(allProducts)) {
+          throw new Error("API response থেকে products array পাওয়া যায়নি");
         }
+
+        // URL slug কে ম্যাপিং অনুযায়ী ডাটাবেজের ক্যাটাগরি নামে রূপান্তর
+        const targetCategory =
+          SLUG_MAPPING[String(categorySlug).toLowerCase()] || categorySlug;
+
+        // category slug অনুযায়ী products filter
+        const categoryProducts = allProducts.filter((product) => {
+          return (
+            String(product?.category ?? "").toLowerCase() ===
+            String(targetCategory).toLowerCase()
+          );
+        });
 
         if (!cancelled) {
           setProducts(categoryProducts);
@@ -133,7 +149,10 @@ function CategoryContent() {
     return 0;
   });
 
-  const categoryInfo = CATEGORY_INFO[categorySlug] || {
+  const normalizedSlug = String(categorySlug || "").toLowerCase();
+  const mappedSlug = SLUG_MAPPING[normalizedSlug] || normalizedSlug;
+
+  const categoryInfo = CATEGORY_INFO[mappedSlug] || {
     name: categorySlug || "ক্যাটাগরি",
     icon: "🛒",
   };
@@ -193,9 +212,11 @@ function CategoryContent() {
         /* API error state */
         <div className="text-center py-16 bg-red-50 rounded-2xl border border-red-100">
           <p className="text-4xl mb-3">⚠️</p>
+
           <h2 className="text-xl font-bold text-gray-800 mb-2">
             তথ্য লোড করা যায়নি
           </h2>
+
           <p className="text-sm text-gray-600 mb-5">
             ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।
           </p>
@@ -225,9 +246,9 @@ function CategoryContent() {
               const isDown = direction === "down";
 
               const productName =
-                product.nameBn || product.name || "নাম পাওয়া যায়নি";
+                products.nameBn || products.name || "নাম পাওয়া যায়নি";
 
-              const productLinkId = product.slug || product.id;
+              const productLinkId = products.slug || products.id;
 
               return (
                 <Link
@@ -236,14 +257,11 @@ function CategoryContent() {
                   className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 flex flex-col justify-between group"
                 >
                   <div>
-
-                    <div>
-                      <div className="text-4xl mb-3 group-hover:scale-110 transition-transform inline-block">
-                        {product.image ||
-                          product.categoryIcon ||
-                          categoryInfo.icon ||
-                          "📦"}
-                      </div>
+                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform inline-block">
+                      {product.image ||
+                        product.categoryIcon ||
+                        categoryInfo.icon ||
+                        "📦"}
                     </div>
 
                     <h2 className="font-semibold text-lg text-gray-800 mb-1">
@@ -261,14 +279,15 @@ function CategoryContent() {
                     </span>
 
                     {changePercent !== undefined &&
-                      changePercent !== null ? (
+                    changePercent !== null ? (
                       <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${isUp
+                        className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
+                          isUp
                             ? "bg-red-100 text-red-700"
                             : isDown
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-100 text-gray-600"
-                          }`}
+                        }`}
                       >
                         {isUp ? "▲ " : isDown ? "▼ " : ""}
                         {Number(changePercent).toLocaleString("bn-BD")}%
@@ -309,13 +328,13 @@ function CategoryContent() {
   );
 }
 
-// Suspense boundary fixes the useParams prerendering error
 export default function CategoryDetailsPage() {
   return (
     <Suspense
       fallback={
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-6" />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
               <div
@@ -331,8 +350,5 @@ export default function CategoryDetailsPage() {
     </Suspense>
   );
 }
-
-
-
 
 
