@@ -19,6 +19,14 @@ export const auth = betterAuth({
 
   secret: process.env.BETTER_AUTH_SECRET,
 
+  // Production ও local development-এর trusted origins
+  trustedOrigins: [
+    "https://bazardorweb.vercel.app",
+    ...(process.env.NODE_ENV !== "production"
+      ? ["http://localhost:3000"]
+      : []),
+  ],
+
   database: mongodbAdapter(db, { client }),
 
   emailAndPassword: {
@@ -40,11 +48,10 @@ export const auth = betterAuth({
     },
   },
 
-account: {
+  account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"], // এখানে গুগল প্রোভাইডার যুক্ত করুন
+      trustedProviders: ["google"],
     },
   },
-
 });
