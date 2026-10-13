@@ -8,7 +8,7 @@ BazarDor is a responsive web application that helps users explore the prices of 
 
 ## 🔗 Project Links
 
-- **Live Website:** Add your deployed website URL here
+- **Live Website:** (https://bazardorweb.vercel.app/)
 - **GitHub Repository:** (https://github.com/reduanahmed2022-reduan/Bazardorweb.git)
 
 ## 🛠️ Technologies Used
