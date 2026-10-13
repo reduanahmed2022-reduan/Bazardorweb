@@ -246,9 +246,9 @@ function CategoryContent() {
               const isDown = direction === "down";
 
               const productName =
-                products.nameBn || products.name || "নাম পাওয়া যায়নি";
+                product.nameBn || product.name || "নাম পাওয়া যায়নি";
 
-              const productLinkId = products.slug || products.id;
+              const productLinkId = product.slug || product.id;
 
               return (
                 <Link
