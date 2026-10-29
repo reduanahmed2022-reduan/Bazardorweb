@@ -1,4 +1,3 @@
-<img width="1364" height="639" alt="Screenshot bazar-dor page" src="https://github.com/user-attachments/assets/094743b2-0170-43f7-9c1c-02179d6455f3" />
 <img width="1364" height="639" alt="Screenshot bazar-dor page" src="https://github.com/user-attachments/assets/207aa259-69bb-4c7f-8402-5c0f38e7dfe6" />
 # 🛒 BazarDor | বাজার দর
 
